@@ -3,10 +3,32 @@ const { sendAppointmentNotifications } = require('../services/notificationServic
 
 exports.createAppointment = async (req, res) => {
   try {
+    console.log('\n=== 📥 [APPOINTMENT API LOG] New Request Received ===');
+    console.log('📝 Raw Request Body:');
+    console.log(JSON.stringify(req.body, null, 2));
+    
     const { department, departmentName, doctorId, doctorName, date, time, name, age, gender, phone, email, reason, isNewPatient } = req.body;
+
+    console.log('\n📝 [APPOINTMENT API LOG] Extracted Fields:');
+    console.log(JSON.stringify({
+      department,
+      departmentName,
+      doctorId,
+      doctorName,
+      date,
+      time,
+      name,
+      age,
+      gender,
+      phone,
+      email,
+      reason,
+      isNewPatient,
+    }, null, 2));
 
     // Generate unique Appointment ID (KRM + 6 random digits)
     const appointmentId = 'KRM' + Math.floor(100000 + Math.random() * 900000);
+    console.log('✅ [APPOINTMENT API LOG] Generated Appointment ID:', appointmentId);
 
     const appointment = await Appointment.create({
       appointmentId,
@@ -25,12 +47,25 @@ exports.createAppointment = async (req, res) => {
       isNewPatient,
     });
 
+    console.log('✅ [APPOINTMENT API LOG] Appointment saved to database');
+    console.log('  - Database ID:', appointment._id);
+
     // Send notifications
-    const { emailSent, whatsappSent } = await sendAppointmentNotifications(appointment);
+    console.log('\n📤 [APPOINTMENT API LOG] Calling sendAppointmentNotifications...');
+    const { patientWhatsappSent, hospitalWhatsappSent, emailSent } = await sendAppointmentNotifications(appointment.toObject());
 
     // Update notification status
-    appointment.notificationSent = { email: emailSent, whatsapp: whatsappSent };
+    appointment.notificationSent.email = emailSent;
+    appointment.notificationSent.whatsapp.patient = patientWhatsappSent;
+    appointment.notificationSent.whatsapp.hospital = hospitalWhatsappSent;
     await appointment.save();
+
+    console.log('\n✅ [APPOINTMENT API LOG] Final Response:');
+    console.log(JSON.stringify({
+      success: true,
+      appointmentId,
+      notificationSent: { email: emailSent, patientWhatsapp: patientWhatsappSent, hospitalWhatsapp: hospitalWhatsappSent }
+    }, null, 2));
 
     res.status(201).json({
       success: true,
@@ -38,7 +73,9 @@ exports.createAppointment = async (req, res) => {
       data: appointment,
     });
   } catch (error) {
-    console.error('Error creating appointment:', error);
+    console.error('\n❌ [APPOINTMENT API LOG] Error creating appointment:', error.message);
+    console.error('  - Stack:', error.stack);
+    console.error('  - Request Body was:', JSON.stringify(req.body, null, 2));
     res.status(500).json({ success: false, message: 'Server Error' });
   }
 };
