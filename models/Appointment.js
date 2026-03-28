@@ -68,7 +68,10 @@ const appointmentSchema = new mongoose.Schema(
     },
     notificationSent: {
       email: { type: Boolean, default: false },
-      whatsapp: { type: Boolean, default: false },
+      whatsapp: {
+        patient: { type: Boolean, default: false },
+        hospital: { type: Boolean, default: false },
+      },
     },
   },
   { timestamps: true }
