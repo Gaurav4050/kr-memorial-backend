@@ -18,6 +18,11 @@ if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
 
 const sendEmail = async ({ to, subject, html }) => {
   try {
+    console.log('\n📧 [EMAIL LOG] Input Parameters:');
+    console.log('  - To:', to);
+    console.log('  - Subject:', subject);
+    console.log('  - HTML preview:', html.substring(0, 50) + '...');
+    
     const mailOptions = {
       from: process.env.EMAIL_FROM,
       to,
@@ -25,23 +30,30 @@ const sendEmail = async ({ to, subject, html }) => {
       html,
     };
     const info = await transporter.sendMail(mailOptions);
-    console.log('Email sent:', info.response);
+    console.log('✅ [EMAIL LOG] Email sent successfully');
+    console.log('  - Response:', info.response);
     return true;
   } catch (error) {
-    console.error('Email error:', error);
+    console.error('❌ [EMAIL LOG] Email error:', error.message);
+    console.error('  - Full error:', error);
     return false;
   }
 };
 
 const sendWhatsApp = async ({ to, message }) => {
   try {
+    console.log('\n📱 [WHATSAPP LOG] Input Parameters:');
+    console.log('  - Raw phone number:', to);
+    console.log('  - Message preview:', message.substring(0, 50) + '...');
+    
     if (!twilioClient) {
-      console.log('Twilio is not configured');
+      console.error('❌ [WHATSAPP LOG] Twilio is not configured');
       return false;
     }
     
     // Ensure "to" format is whatsapp:+91XXXXXXXXXX
     const formattedTo = to.startsWith('whatsapp:') ? to : `whatsapp:+91${to}`;
+    console.log('  - Formatted phone:', formattedTo);
     
     const response = await twilioClient.messages.create({
       body: message,
@@ -49,18 +61,35 @@ const sendWhatsApp = async ({ to, message }) => {
       to: formattedTo,
     });
     
-    console.log('WhatsApp sent:', response.sid);
+    console.log('✅ [WHATSAPP LOG] Message sent successfully');
+    console.log('  - Message SID:', response.sid);
+    console.log('  - From:', process.env.TWILIO_WHATSAPP_FROM);
+    console.log('  - To:', formattedTo);
     return true;
   } catch (error) {
-    console.error('WhatsApp error:', error);
+    console.error('❌ [WHATSAPP LOG] Error:', error.message);
+    console.error('  - Full error:', error);
     return false;
   }
 };
 
 const sendAppointmentNotifications = async (appointment) => {
+  console.log('\n📋 [APPOINTMENT NOTIFICATION LOG] Received Payload:');
+  console.log(JSON.stringify(appointment, null, 2));
+  
   const { name, date, time, appointmentId, phone, email, departmentName, doctorName } = appointment;
   
-  // WhatsApp Message
+  console.log('\n📋 [APPOINTMENT NOTIFICATION LOG] Extracted Fields:');
+  console.log('  - Name:', name);
+  console.log('  - Phone:', phone);
+  console.log('  - Email:', email);
+  console.log('  - Department:', departmentName);
+  console.log('  - Doctor:', doctorName);
+  console.log('  - Date:', date);
+  console.log('  - Time:', time);
+  console.log('  - Appointment ID:', appointmentId);
+  
+  // WhatsApp Message for Patient
   const whatsappMessage = `Hello ${name}, your appointment at K.R. Memorial Hospital is confirmed!
 ID: ${appointmentId}
 Dept: ${departmentName}
@@ -69,6 +98,20 @@ Date: ${date}
 Time: ${time}
 
 Please carry valid ID and previous records. Need help? Call: +91-8006005111`;
+
+  // WhatsApp Message for Hospital
+  const hospitalMessage = `New Appointment Booked!
+Patient: ${name}
+ID: ${appointmentId}
+Department: ${departmentName}
+Doctor: ${doctorName || 'Any Available'}
+Date: ${date}
+Time: ${time}
+Phone: ${phone}`;
+
+  console.log('\n📋 [APPOINTMENT NOTIFICATION LOG] Messages Created:');
+  console.log('  - Patient WhatsApp message created');
+  console.log('  - Hospital WhatsApp message created');
 
   // Email Html
   const emailHtml = `
@@ -86,18 +129,44 @@ Please carry valid ID and previous records. Need help? Call: +91-8006005111`;
     <p>Thank you,<br>K.R. Memorial Hospital</p>
   `;
 
-  let whatsappSent = false;
+  let patientWhatsappSent = false;
+  let hospitalWhatsappSent = false;
   let emailSent = false;
 
+  console.log('\n📋 [APPOINTMENT NOTIFICATION LOG] Starting Notifications:');
+  
+  // Send to Patient
   if (phone) {
-    whatsappSent = await sendWhatsApp({ to: phone, message: whatsappMessage });
+    console.log('  📤 Sending WhatsApp to patient...');
+    patientWhatsappSent = await sendWhatsApp({ to: phone, message: whatsappMessage });
+    console.log('  📤 Patient WhatsApp result:', patientWhatsappSent);
+  } else {
+    console.log('  ⚠️  No phone number provided - skipping patient WhatsApp');
   }
   
+  // Send to Hospital
+  const hospitalNumber = process.env.HOSPITAL_WHATSAPP_NUMBER;
+  if (hospitalNumber) {
+    console.log('  📤 Sending WhatsApp to hospital (' + hospitalNumber + ')...');
+    hospitalWhatsappSent = await sendWhatsApp({ to: hospitalNumber, message: hospitalMessage });
+    console.log('  📤 Hospital WhatsApp result:', hospitalWhatsappSent);
+  } else {
+    console.log('  ⚠️  HOSPITAL_WHATSAPP_NUMBER not in .env - skipping hospital WhatsApp');
+  }
+  
+  // Send email to patient
   if (email) {
+    console.log('  📧 Sending email to patient...');
     emailSent = await sendEmail({ to: email, subject: `Appointment Confirmed - ${appointmentId}`, html: emailHtml });
+    console.log('  📧 Email result:', emailSent);
+  } else {
+    console.log('  ⚠️  No email provided - skipping email');
   }
 
-  return { whatsappSent, emailSent };
+  console.log('\n✅ [APPOINTMENT NOTIFICATION LOG] Final Results:');
+  console.log(JSON.stringify({ patientWhatsappSent, hospitalWhatsappSent, emailSent }, null, 2));
+
+  return { patientWhatsappSent, hospitalWhatsappSent, emailSent };
 };
 
 const sendOtpEmail = async (email, otp) => {
