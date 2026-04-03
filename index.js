@@ -8,6 +8,7 @@ const connectDB = require('./config/db');
 const appointmentRoutes = require('./routes/appointmentRoutes');
 const authRoutes = require('./routes/authRoutes');
 const doctorRoutes = require('./routes/doctorRoutes');
+const contactRoutes = require('./routes/contactRoutes');
 
 // Connect Database
 connectDB();
@@ -32,6 +33,7 @@ app.use(limiter);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/doctors', doctorRoutes);
+app.use('/api/contact', contactRoutes);
 
 app.get('/', (req, res) => {
   res.send('API is running...');
