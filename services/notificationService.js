@@ -113,7 +113,7 @@ Phone: ${phone}`;
   console.log('  - Patient WhatsApp message created');
   console.log('  - Hospital WhatsApp message created');
 
-  // Email Html
+  // Email Html for Patient
   const emailHtml = `
     <h2>Appointment Confirmed!</h2>
     <p>Dear ${name},</p>
@@ -127,6 +127,30 @@ Phone: ${phone}`;
     </ul>
     <p>Please bring a valid photo ID and any previous medical records.</p>
     <p>Thank you,<br>K.R. Memorial Hospital</p>
+  `;
+
+  // Email Html for Hospital
+  const hospitalEmailHtml = `
+    <h2 style="color: #0B3D91;">New Appointment Booking</h2>
+    <p><strong>Patient Details:</strong></p>
+    <ul>
+      <li><strong>Name:</strong> ${name}</li>
+      <li><strong>Phone:</strong> ${phone}</li>
+      <li><strong>Email:</strong> ${email || 'N/A'}</li>
+      <li><strong>Age:</strong> ${appointment.age}</li>
+      <li><strong>Gender:</strong> ${appointment.gender}</li>
+      <li><strong>Patient Type:</strong> ${appointment.isNewPatient ? 'New Patient' : 'Existing Patient'}</li>
+    </ul>
+    <p><strong>Appointment Details:</strong></p>
+    <ul>
+      <li><strong>Appointment ID:</strong> ${appointmentId}</li>
+      <li><strong>Department:</strong> ${departmentName}</li>
+      <li><strong>Doctor:</strong> ${doctorName || 'Any Available'}</li>
+      <li><strong>Date:</strong> ${date}</li>
+      <li><strong>Time:</strong> ${time}</li>
+      <li><strong>Reason:</strong> ${appointment.reason || 'N/A'}</li>
+    </ul>
+    <p style="color: #666; font-size: 12px;">This is an automated notification from K.R. Memorial Hospital appointment system.</p>
   `;
 
   let patientWhatsappSent = false;
@@ -161,6 +185,16 @@ Phone: ${phone}`;
     console.log('  📧 Email result:', emailSent);
   } else {
     console.log('  ⚠️  No email provided - skipping email');
+  }
+
+  // Send email to hospital
+  const hospitalEmail = process.env.HOSPITAL_EMAIL;
+  if (hospitalEmail) {
+    console.log('  📧 Sending email to hospital (' + hospitalEmail + ')...');
+    await sendEmail({ to: hospitalEmail, subject: `New Appointment Booking - ${appointmentId}`, html: hospitalEmailHtml });
+    console.log('  📧 Hospital email sent');
+  } else {
+    console.log('  ⚠️  HOSPITAL_EMAIL not in .env - skipping hospital email');
   }
 
   console.log('\n✅ [APPOINTMENT NOTIFICATION LOG] Final Results:');
