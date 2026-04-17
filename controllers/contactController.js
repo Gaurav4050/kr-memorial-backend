@@ -129,7 +129,7 @@ exports.submitContact = async (req, res) => {
             <h4 style="color: #334155;">Need Immediate Help?</h4>
             <p style="color: #64748B;">
               <strong>📞 Call Us:</strong> <a href="tel:8006005111" style="color: #0B3D91;">8006005111</a> or <a href="tel:01423220320" style="color: #0B3D91;">01423-220320</a><br>
-              <strong>📍 Visit Us:</strong> NH-11, Sikar Road, Chomu, Jaipur, Rajasthan 303702<br>
+              <strong>📍 Visit Us:</strong> Radhaswami Bagh, NH52, Sikar Road, Chomu, Jaipur, Rajasthan 303702<br>
               <strong>🕐 24/7 Emergency:</strong> Available round the clock
             </p>
 
