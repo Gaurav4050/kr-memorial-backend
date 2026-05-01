@@ -120,7 +120,6 @@ Phone: ${phone}`;
     <p>Your appointment has been successfully scheduled at K.R. Memorial Hospital.</p>
     <ul>
       <li><strong>Appointment ID:</strong> ${appointmentId}</li>
-      <li><strong>Department:</strong> ${departmentName}</li>
       <li><strong>Doctor:</strong> ${doctorName || 'Any Available'}</li>
       <li><strong>Date:</strong> ${date}</li>
       <li><strong>Time:</strong> ${time}</li>
@@ -144,7 +143,6 @@ Phone: ${phone}`;
     <p><strong>Appointment Details:</strong></p>
     <ul>
       <li><strong>Appointment ID:</strong> ${appointmentId}</li>
-      <li><strong>Department:</strong> ${departmentName}</li>
       <li><strong>Doctor:</strong> ${doctorName || 'Any Available'}</li>
       <li><strong>Date:</strong> ${date}</li>
       <li><strong>Time:</strong> ${time}</li>
