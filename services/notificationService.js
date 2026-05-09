@@ -54,10 +54,19 @@ const sendWhatsApp = async ({ to, message }) => {
     // Ensure "to" format is whatsapp:+91XXXXXXXXXX
     const formattedTo = to.startsWith('whatsapp:') ? to : `whatsapp:+91${to}`;
     console.log('  - Formatted phone:', formattedTo);
+
+    // Ensure "from" format is whatsapp:+XXXXXXXXXXX
+    const rawFrom = process.env.TWILIO_WHATSAPP_FROM;
+    if (!rawFrom) {
+      console.error('❌ [WHATSAPP LOG] TWILIO_WHATSAPP_FROM is not set in .env');
+      return false;
+    }
+    const formattedFrom = rawFrom.startsWith('whatsapp:') ? rawFrom : `whatsapp:${rawFrom}`;
+    console.log('  - Formatted from:', formattedFrom);
     
     const response = await twilioClient.messages.create({
       body: message,
-      from: process.env.TWILIO_WHATSAPP_FROM,
+      from: formattedFrom,
       to: formattedTo,
     });
     
@@ -103,7 +112,6 @@ Please carry valid ID and previous records. Need help? Call: +91-8006005111`;
   const hospitalMessage = `New Appointment Booked!
 Patient: ${name}
 ID: ${appointmentId}
-Department: ${departmentName}
 Doctor: ${doctorName || 'Any Available'}
 Date: ${date}
 Time: ${time}
