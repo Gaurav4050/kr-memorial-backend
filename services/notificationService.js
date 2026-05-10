@@ -106,7 +106,7 @@ Doctor: ${doctorName || 'Any Available'}
 Date: ${date}
 Time: ${time}
 
-Please carry valid ID and previous records. Need help? Call: +91-8006005111`;
+Please carry valid ID and previous records. Need help? Call: +91-8306005111`;
 
   // WhatsApp Message for Hospital
   const hospitalMessage = `New Appointment Booked!
